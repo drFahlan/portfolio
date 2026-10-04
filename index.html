@@ -1,0 +1,863 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dwi Rezky Fahlan — Research Projects</title>
+<meta name="description" content="Five health-focused machine learning projects written as research case studies: the question, the data exploration, the pipeline, and the results.">
+<meta name="theme-color" content="#eef0e9">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='4' fill='%232f6f9e'/%3E%3Ctext x='16' y='22' font-family='Georgia,serif' font-size='18' text-anchor='middle' fill='white'%3EF%3C/text%3E%3C/svg%3E">
+<style>body{margin:0}img,video{max-width:100%}[hidden]{display:none!important}</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    color-scheme: light;
+    --paper: #eef0e9;
+    --paper-raised: #f7f8f3;
+    --grid: #e0e4d8;
+    --ink: #171c22;
+    --ink-soft: #55606a;
+    --blueprint: #2f6f9e;
+    --blueprint-soft: #dce8ee;
+    --amber: #a9540f;
+    --line: #c3c9bc;
+    --line-strong: #8f998d;
+    --font-display: "Instrument Serif", Georgia, "Times New Roman", serif;
+    --font-body: "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      color-scheme: dark;
+      --paper: #141a20;
+      --paper-raised: #1b2229;
+      --grid: #1b2429;
+      --ink: #e9e6dc;
+      --ink-soft: #a7b0ac;
+      --blueprint: #6fa8cc;
+      --blueprint-soft: #223640;
+      --amber: #e08a44;
+      --line: #333e3e;
+      --line-strong: #5a6764;
+    }
+  }
+  :root[data-theme="dark"]{
+    color-scheme: dark;
+    --paper: #141a20;
+    --paper-raised: #1b2229;
+    --grid: #1b2429;
+    --ink: #e9e6dc;
+    --ink-soft: #a7b0ac;
+    --blueprint: #6fa8cc;
+    --blueprint-soft: #223640;
+    --amber: #e08a44;
+    --line: #333e3e;
+    --line-strong: #5a6764;
+  }
+
+  *{ box-sizing:border-box; }
+  body{
+    background-color: var(--paper);
+    background-image:
+      repeating-linear-gradient(to right, var(--grid) 0 1px, transparent 1px 88px),
+      repeating-linear-gradient(to bottom, var(--grid) 0 1px, transparent 1px 88px);
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-size: 15px;
+    line-height: 1.6;
+  }
+  h1,h2,h3{ font-family: var(--font-display); font-weight:400; text-wrap: balance; margin:0; }
+  em{ font-style: italic; color: var(--blueprint); }
+  a{ color: var(--blueprint); }
+
+  .layout{
+    display:grid;
+    grid-template-columns: 140px 1fr;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding-inline: 16px;
+  }
+  @media (max-width: 860px){ .layout{ grid-template-columns: 1fr; } }
+
+  /* ---------- rail ---------- */
+  .rail{
+    position: sticky;
+    top: env(safe-area-inset-top, 0px);
+    align-self: start;
+    padding: 26px 14px 26px 0;
+    border-right: 1px solid var(--line);
+  }
+  @media (max-width: 860px){
+    .rail{ position: static; border-right:none; border-bottom: 1px solid var(--line-strong); padding: 16px 0 20px; display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; }
+  }
+  .rail-mark{
+    font-family: var(--font-mono); font-size: 9.5px; letter-spacing: .14em; color: var(--ink-soft);
+    writing-mode: vertical-rl; transform: rotate(180deg); margin-bottom: 16px;
+  }
+  @media (max-width: 860px){ .rail-mark{ writing-mode: horizontal-tb; transform:none; margin:0; } }
+  .rail-nav{ display:flex; flex-direction:column; gap:1px; list-style:none; padding:0; margin:0; }
+  @media (max-width: 860px){ .rail-nav{ display:none; } }
+  .rail-nav a{
+    display:flex; gap:7px; align-items:baseline; text-decoration:none; color: var(--ink-soft);
+    font-family: var(--font-mono); font-size: 11px; padding: 5px 0 5px 8px;
+    border-left: 2px solid transparent;
+  }
+  .rail-nav a:hover, .rail-nav a.active{ color: var(--ink); border-left-color: var(--blueprint); }
+  .rail-nav a span{ color: var(--line-strong); font-size:10px; }
+  .rail-menu-btn{ display:none; font-family: var(--font-mono); font-size: 12px; background:none; border:1px solid var(--line-strong); color:var(--ink); padding:7px 12px; border-radius:2px; }
+  @media (max-width: 860px){ .rail-menu-btn{ display:inline-block; } }
+  .rail-drop{ display:none; flex-direction:column; width:100%; list-style:none; padding: 10px 0 0; margin:0; }
+  .rail-drop.open{ display:flex; }
+  .rail-drop a{ font-family: var(--font-mono); font-size:13px; color:var(--ink-soft); text-decoration:none; padding:8px 0; border-bottom:1px dashed var(--line); display:block; }
+
+  main{ padding: 28px 0 60px; min-width:0; }
+
+  .stamp{
+    display:inline-flex; border: 1.5px dashed var(--amber); color: var(--amber);
+    font-family: var(--font-mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase;
+    padding: 6px 10px; border-radius: 3px; transform: rotate(-1.2deg);
+  }
+  .todo{ color: var(--ink-soft); font-style: italic; border-bottom: 1px dashed var(--line-strong); }
+
+  /* ---------- hero ---------- */
+  .hero{ padding-block: 18px 46px; border-bottom: 1px solid var(--line-strong); }
+  .hero-top{ display:flex; justify-content:space-between; align-items:flex-start; gap:16px; flex-wrap:wrap; margin-bottom: 34px; }
+  .meta-mono{ font-family: var(--font-mono); font-size:11px; color:var(--ink-soft); letter-spacing:.1em; }
+  .hero h1{ font-size: clamp(40px, 7vw, 68px); line-height:1.02; }
+  .hero-role{ font-family: var(--font-mono); color:var(--ink-soft); font-size:13px; letter-spacing:.06em; margin-top:12px; }
+  .hero-thesis{ max-width: 62ch; margin-top:18px; color: var(--ink-soft); font-size:16px; }
+  .hero-stats{ display:flex; margin-top:32px; border-top:1px solid var(--line); flex-wrap:wrap; }
+  .stat{ flex:1 1 150px; padding: 14px 18px 0 0; border-right:1px solid var(--line); }
+  .stat:last-child{ border-right:none; }
+  .stat b{ display:block; font-family: var(--font-display); font-size: 32px; font-weight:400; }
+  .stat span{ font-family: var(--font-mono); font-size:11px; color:var(--ink-soft); letter-spacing:.05em; }
+  .stats-note{ font-family: var(--font-mono); font-size:10.5px; color:var(--ink-soft); margin-top:12px; }
+
+  /* ---------- sections ---------- */
+  section{ padding-block: 46px; border-bottom: 1px solid var(--line-strong); }
+  .sec-head{ display:flex; align-items:baseline; gap:14px; margin-bottom: 26px; }
+  .sec-num{ font-family: var(--font-mono); color: var(--line-strong); font-size: 13px; }
+  .sec-head h2{ font-size: 28px; }
+  .placeholder{ border:1px dashed var(--line-strong); border-radius:3px; padding:16px 18px; color:var(--ink-soft); max-width:62ch; }
+  .placeholder b{ display:block; font-family: var(--font-mono); font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--amber); margin-bottom:6px; font-weight:500; }
+
+  /* ---------- work entry ---------- */
+  .entry-head{ display:flex; justify-content:space-between; align-items:flex-end; gap:14px; flex-wrap:wrap; border-bottom:1px dashed var(--line-strong); padding-bottom:14px; margin-bottom:20px; }
+  .entry-title{ display:flex; align-items:baseline; gap:14px; flex-wrap:wrap; }
+  .entry-title .idx{ font-family: var(--font-mono); font-size:13px; color: var(--line-strong); }
+  .entry-title h3{ font-size: 28px; }
+  .entry-title .sub{ font-family: var(--font-mono); font-size:12px; color: var(--ink-soft); }
+  .entry-meta{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+  .tag{ font-family: var(--font-mono); font-size:10.5px; letter-spacing:.05em; text-transform:uppercase; border:1px solid var(--line-strong); border-radius:3px; padding:3px 8px; color:var(--ink-soft); }
+  .tag.status{ color: var(--blueprint); border-color: var(--blueprint); background: var(--blueprint-soft); }
+  .tag.warn{ color: var(--amber); border-color: var(--amber); }
+
+  .entry-title h3 em{ color: var(--blueprint); }
+  .anam-def{ margin:0 0 18px; max-width:66ch; font-size:16px; }
+  .anam-def b{ font-family: var(--font-display); font-weight:400; font-size:22px; font-style:italic; color:var(--blueprint); }
+  .anam{ border:1px solid var(--blueprint); background: var(--blueprint-soft); border-radius:3px; padding:16px 18px; margin-bottom:28px; }
+  .anam-head{ display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; font-family: var(--font-mono); font-size:10.5px; letter-spacing:.1em; color:var(--blueprint); margin-bottom:14px; }
+  .anam-grid{ display:grid; grid-template-columns: 1fr 1fr; gap:22px; }
+  @media (max-width: 760px){ .anam-grid{ grid-template-columns:1fr; } }
+  .anam-label{ font-family: var(--font-mono); font-size:10.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-soft); margin-bottom:8px; }
+  .anam-quote{ margin:0; font-family: var(--font-display); font-size:22px; line-height:1.35; }
+  .anam-quote mark{ background: var(--paper-raised); color:var(--ink); border-bottom:2px solid var(--blueprint); padding:0 2px; }
+  .gloss{ margin:2px 0 14px; font-family: var(--font-mono); font-size:11.5px; color:var(--ink-soft); }
+  .anam-quote + .gloss + .anam-quote{ margin-top:4px; }
+  .anam-list{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:10px; }
+  .anam-list li{ display:grid; grid-template-columns: auto 1fr; gap:2px 12px; background: var(--paper-raised); border:1px solid var(--line); border-radius:3px; padding:9px 12px; }
+  .anam-list .q{ font-family: var(--font-mono); font-size:11px; color:var(--ink-soft); grid-column:1; }
+  .anam-list li{ grid-template-columns: 1fr; }
+  .anam-list .q,.anam-list .a,.anam-list .ev{ grid-column:1; }
+  .anam-list .a{ font-weight:600; }
+  .anam-list .a::before{ content:"→ "; color:var(--blueprint); }
+  .anam-list .ev{ grid-column:1 / -1; font-family: var(--font-mono); font-size:11px; color:var(--blueprint); }
+  .anam-foot{ margin-top:14px; font-size:13px; color:var(--ink-soft); }
+  .anam-photo{ width:100%; display:block; border-radius:3px; border:1px solid var(--line-strong); margin-bottom:12px; }
+  .fig-grid{ display:grid; grid-template-columns:1fr 1fr; gap:16px; margin:12px 0 18px; }
+  @media (max-width: 640px){ .fig-grid{ grid-template-columns:1fr; } }
+  .fig-grid .figure{ margin:0; }
+  .fig-grid .figure.full{ grid-column:1 / -1; }
+  .fig-desc{ margin:10px 0 0; font-size:13px; color:var(--ink-soft); }
+  .fig-desc b{ color:var(--ink); font-weight:600; }
+  .field.exploration .anam{ margin:2px 0 22px; }
+  .hero-fig{ max-width:360px; margin:0 0 26px; }
+  .diagram-fig img{ border-radius:2px; }
+  .figure.solo + .figure.solo{ margin-top:16px; }
+  .figure.solo img{ display:block; width:100%; height:auto; }
+  .leads{ list-style:none; margin:0 0 14px; padding:0; display:flex; flex-direction:column; gap:10px; }
+  .leads li{ display:grid; grid-template-columns:1fr auto 1fr; gap:6px 14px; align-items:start; background:var(--paper-raised); border:1px solid var(--line); border-radius:3px; padding:10px 14px; font-size:13.5px; }
+  .leads .ar{ color:var(--blueprint); font-family:var(--font-mono); }
+  .leads .d{ font-weight:600; }
+  @media (max-width: 640px){ .leads li{ grid-template-columns:1fr; } .leads .ar{ display:none; } }
+  .steps{ margin:8px 0 8px; padding-left:20px; max-width:62ch; font-size:14px; }
+  .steps li{ margin-bottom:4px; }
+  .steps b{ font-weight:600; }
+  .figure.wide-solo{ max-width:640px; }
+  .demo-video{ display:block; width:100%; height:auto; border-radius:2px; background:var(--paper); }
+  .tag.todo-tag{ border-style:dashed; font-style:italic; }
+  .xcards{ display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
+  @media (max-width: 760px){ .xcards{ grid-template-columns:1fr; } }
+  .xcard{ background:var(--paper-raised); border:1px solid var(--line); border-radius:3px; padding:12px 14px; }
+  .xnum{ font-family:var(--font-display); font-size:28px; line-height:1.1; }
+  .xlab{ font-family:var(--font-mono); font-size:10px; letter-spacing:.06em; text-transform:uppercase; color:var(--blueprint); margin:4px 0 8px; }
+  .xcard p{ margin:0; font-size:13px; color:var(--ink-soft); }
+  .choice-wrap{ overflow-x:auto; margin-top:14px; max-width:640px; }
+  .choice{ border-collapse:collapse; width:100%; min-width:520px; font-size:13px; }
+  .choice th{ text-align:left; font-family:var(--font-mono); font-size:10.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-soft); font-weight:500; padding:6px 10px 6px 0; border-bottom:1px solid var(--line-strong); }
+  .choice td{ padding:8px 10px 8px 0; border-bottom:1px solid var(--line); vertical-align:top; }
+  .choice code{ font-family:var(--font-mono); font-size:11.5px; }
+  .figure.solo{ margin:12px 0 0; max-width:520px; }
+  .qual{ margin-top:22px; }
+  .qual-fig{ margin:10px 0 16px; max-width:600px; }
+  .qual-fig:last-child{ margin-bottom:0; }
+  .entry-body.stacked{ display:block; }
+  .entry-body{ display:grid; grid-template-columns: 300px 1fr; gap: 30px; }
+  @media (max-width: 760px){ .entry-body{ grid-template-columns:1fr; } }
+  .figure{ margin:0; border:1px solid var(--line-strong); background: var(--paper-raised); border-radius:3px; padding: 14px; align-self:start; }
+  .figure svg{ width:100%; height:auto; display:block; }
+  .figure figcaption{ font-family: var(--font-mono); font-size:10.5px; color: var(--ink-soft); margin-top:10px; }
+
+  .field{ margin-bottom: 16px; }
+  .field dt{ font-family: var(--font-mono); font-size:10.5px; color: var(--blueprint); letter-spacing:.1em; text-transform:uppercase; margin-bottom:4px; }
+  .field dd{ margin:0; max-width: 62ch; }
+  .field dd + dd{ margin-top:10px; }
+  .nums{ display:flex; flex-wrap:wrap; gap:8px 22px; margin-top:10px; }
+  .nums div{ font-family: var(--font-mono); font-size:12px; color:var(--ink-soft); }
+  .nums b{ display:block; font-family: var(--font-display); font-weight:400; font-size:24px; color:var(--ink); }
+  .bars{ margin-top:14px; max-width:520px; display:flex; flex-direction:column; gap:10px; }
+  .bars-head{ display:grid; grid-template-columns: 70px 1fr auto; gap:12px; font-family: var(--font-mono); font-size:10.5px; color:var(--ink-soft); justify-content:end; }
+  .bars-head .key{ display:inline-flex; align-items:center; gap:6px; }
+  .bars-head{ display:flex; gap:16px; justify-content:flex-end; }
+  .bars.wide .bar-row{ grid-template-columns: 118px 1fr 52px; }
+  .bars.wide .b0,.bars.wide .b1{ height:10px; }
+  .bars i{ display:inline-block; width:10px; height:10px; border-radius:2px; }
+  .k0{ background: var(--line-strong); } .k1{ background: var(--blueprint); }
+  .bar-row{ display:grid; grid-template-columns: 70px 1fr 92px; gap:12px; align-items:center; font-family: var(--font-mono); font-size:12px; }
+  .bt{ display:flex; flex-direction:column; gap:3px; }
+  .b0,.b1{ height:8px; border-radius:1px; }
+  .b0{ background: var(--line-strong); } .b1{ background: var(--blueprint); }
+  .bv{ text-align:right; color:var(--ink); }
+  .errs{ margin-top:18px; max-width:520px; }
+  .errs-label{ font-family: var(--font-mono); font-size:10.5px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-soft); margin-bottom:8px; }
+  .errs-bar{ display:flex; gap:2px; height:12px; }
+  .errs-bar i{ display:block; border-radius:1px; }
+  .e-ok{ background: var(--blueprint); } .e-wrong{ background: var(--amber); } .e-hall{ background: var(--ink); } .e-miss{ background: transparent; border:1px dashed var(--line-strong); }
+  .errs-key{ display:flex; flex-wrap:wrap; gap:6px 16px; margin-top:8px; font-family: var(--font-mono); font-size:11px; color:var(--ink-soft); }
+  .errs-key span{ display:inline-flex; align-items:center; gap:6px; }
+  .errs-key i{ display:inline-block; width:10px; height:10px; border-radius:2px; }
+  .stack-row{ display:flex; flex-wrap:wrap; gap:6px; margin-top:14px; }
+  .chip{ font-family: var(--font-mono); font-size:12px; border:1px solid var(--line-strong); border-radius:3px; padding:5px 9px; background: var(--paper-raised); }
+  .chip.add{ border-style:dashed; color:var(--ink-soft); background:none; }
+  .privacy-note{ margin-top:16px; font-family: var(--font-mono); font-size:11.5px; color: var(--ink-soft); display:flex; gap:8px; }
+  .privacy-note::before{ content:"›"; color:var(--amber); }
+  .next-slot{ margin-top:44px; border:1px dashed var(--line-strong); border-radius:3px; padding:18px; font-family: var(--font-mono); font-size:12px; color:var(--ink-soft); }
+
+  /* ---------- skills ---------- */
+  .skill-groups{ display:grid; grid-template-columns: repeat(auto-fit, minmax(220px,1fr)); gap: 24px; }
+  .skill-group h4{ font-family: var(--font-mono); font-size:11px; letter-spacing:.1em; text-transform:uppercase; color: var(--ink-soft); margin: 0 0 12px; font-weight:500; }
+  .chip-row{ display:flex; flex-wrap:wrap; gap:7px; }
+
+  /* ---------- contact ---------- */
+  .contact{ display:flex; flex-direction:column; gap:22px; }
+  .contact h2{ font-size: clamp(34px,6vw,52px); }
+  .contact-row{ display:flex; gap:14px; align-items:center; flex-wrap:wrap; }
+  .email-box{ font-family: var(--font-mono); font-size:14px; border:1px dashed var(--line-strong); border-radius:3px; padding:10px 14px; background: var(--paper-raised); color:var(--ink-soft); }
+  .social-links{ display:flex; gap:16px; font-family: var(--font-mono); font-size:13px; flex-wrap:wrap; }
+  .social-links a{ text-decoration:none; border-bottom:1px solid var(--line-strong); padding-bottom:1px; }
+  footer.foot{ padding: 22px 0 40px; font-family: var(--font-mono); font-size:11px; color: var(--ink-soft); display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px; }
+
+  /* ---------- spacing and image sizing ---------- */
+  main{ padding: 28px 0 60px 36px; }
+  @media (max-width: 860px){ main{ padding-left:0; } }
+  .hero{ padding-block: 8px 34px; }
+  .hero h1{ font-size: clamp(34px, 5.5vw, 52px); }
+  .hero-thesis{ margin-top:12px; font-size:15.5px; }
+  .anam-photo{ max-width:100%; }
+  .anam-photo.small{ max-width:340px; }
+  .anam-photo.wide{ max-width:620px; }
+  .fig-grid .figure img{ display:block; max-height:300px; width:auto; max-width:100%; margin:0 auto; }
+  .qual-fig{ max-width:460px; }
+  .figure.solo{ max-width:460px; }
+  .figure.wide-solo{ max-width:500px; }
+  .hero-fig{ max-width:300px; }
+</style>
+</head>
+<body>
+<div class="layout">
+  <nav class="rail">
+    <div class="rail-mark">FIELD LOGBOOK / RESEARCH PROJECTS</div>
+    <ul class="rail-nav" id="railNav">
+      <li><a href="#hero"><span>00</span>Cover</a></li>
+      <li><a href="#cell-detection"><span>01</span>Cell detection</a></li>
+      <li><a href="#anamnesis"><span>02</span>Anamnesis</a></li>
+      <li><a href="#virtual-screening"><span>03</span>Screening</a></li>
+      <li><a href="#optic-disc-cup"><span>04</span>Disc &amp; cup</a></li>
+      <li><a href="#doc-extractor"><span>05</span>Doc-Extractor</a></li>
+    </ul>
+    <button class="rail-menu-btn" id="menuBtn" aria-expanded="false">MENU ▾</button>
+    <ul class="rail-drop" id="railDrop">
+      <li><a href="#hero">00 · Cover</a></li>
+      <li><a href="#cell-detection">01 · Cell detection</a></li>
+      <li><a href="#anamnesis">02 · Anamnesis</a></li>
+      <li><a href="#virtual-screening">03 · Virtual screening</a></li>
+      <li><a href="#optic-disc-cup">04 · Optic disc &amp; cup</a></li>
+      <li><a href="#doc-extractor">05 · Doc-Extractor</a></li>
+    </ul>
+  </nav>
+
+  <main>
+    <section class="hero" id="hero">
+      <h1>Dwi Rezky Fahlan</h1>
+      <p class="hero-thesis">Five research projects in machine learning for health, each presented by its aim, exploration, approach and results.</p>
+    </section>
+
+    <section id="work">
+      <div class="sec-head"><h2>Projects</h2></div>
+
+      <article class="entry" id="cell-detection">
+        <div class="entry-head">
+          <div class="entry-title">
+            <span class="idx">01</span>
+            <h3>Tissue-Guided <em>Cell Detection</em></h3>
+            <span class="sub">OCELOT dataset</span>
+          </div>
+          <div class="entry-meta">
+            <span class="tag">2025</span>
+            <span class="tag">Team of 3 · first author</span>
+            <span class="tag status">Published</span>
+            <span class="tag">IUPESM 2025</span>
+          </div>
+        </div>
+
+        <p class="anam-def"><b>Tissue-guided</b> detection means telling tumor cells from background cells using where they sit in the tissue, not only how they look.</p>
+
+        <div class="entry-body stacked">
+          <div>
+            <dl>
+              <div class="field"><dt>Aim</dt><dd>Does adding tissue-level context improve tumor cell detection — and if so, by how much, at which integration point, and under what conditions does it stop helping?</dd></div>
+              <div class="field exploration">
+              <div class="anam">
+                <div class="anam-head"><span>EXPLORATION — TUMOR CELLS CLUSTER INSIDE CANCER TISSUE</span><span class="tag status">EDA finding</span></div>
+                <img class="anam-photo small" src="img/eda_spatial_arrangement.png" alt="Tumor cells (blue) and background cells (yellow) plotted on tissue; tumor cells cluster inside the cancer region.">
+                <div class="anam-foot">Blue = tumor cells, yellow = background cells. Shape, size, and texture all play some role, but location was the main one: a cell surrounded by tumor cells is usually a tumor cell itself.</div>
+              </div>
+              </div>
+              <div class="field">
+                <dt>Approach</dt>
+                <dd>The EDA showed spatial context matters more than appearance, so we first built an accurate tissue segmentation model (U-Net++ with an SE-ResNet50 backbone) to supply it. Its output is then integrated at two points: at pre-processing, to see how the cell model learns from it, and at post-processing, as a correction to the cell detector's predictions.</dd>
+                <div class="fig-grid">
+                  <figure class="figure">
+                    <img src="img/tissue_pipeline.png" alt="Tissue segmentation pipeline: large FoV cropped and pre-processed, then a tissue segmentation model produces a tumor region probability map, cropped back to the small FoV region.">
+                    <figcaption>FIG. 1 — tissue segmentation</figcaption>
+                    <p class="fig-desc">Stage 1: a U-Net++ with an SE-ResNet50 encoder turns the wide view into a tumor probability map, chosen to handle the ambiguous cancer boundaries seen in EDA.</p>
+                  </figure>
+                  <figure class="figure">
+                    <img src="img/pipeline.png" alt="Cell detection pipeline: small FoV through pre-processing into the cell segmentation model, producing a cell probability map; post-processing detects local maxima, scores confidence and filters across channels to produce cell detection results.">
+                    <figcaption>FIG. 2 — cell detection</figcaption>
+                    <p class="fig-desc">Stage 2: a lightweight Attention U-Net (ResNet34) detects tumor and background cells on the close-up view, since cells are already visually distinguishable at that scale.</p>
+                  </figure>
+                  <figure class="figure">
+                    <img src="img/integration_preprocessing.png" alt="Pre-processing integration: the tumor region probability map is concatenated with the small FoV before the cell segmentation model.">
+                    <figcaption>FIG. 3 — pre-processing integration</figcaption>
+                    <p class="fig-desc">The tumor map is concatenated to the small FoV as a 4th input channel, so the detector learns to use tissue context end-to-end. Best overall mF1.</p>
+                  </figure>
+                  <figure class="figure">
+                    <img src="img/integration_postprocessing.png" alt="Post-processing integration: confidence scores from the cell probability map and the tumor region probability map are averaged to refine detections.">
+                    <figcaption>FIG. 4 — post-processing integration</figcaption>
+                    <p class="fig-desc">After detection, confidence from the tumor map is averaged with the model's own score to refine predictions, no retraining required. Best tumor recall.</p>
+                  </figure>
+                </div>
+              </div>
+              <div class="field">
+                <dt>Outcome</dt>
+                <dd>On the OCELOT test set both beat the no-integration baseline. Pre gave the best mF1, post the best tumor recall.</dd>
+                <div class="bars wide" role="img" aria-label="Test-set mF1: no integration 0.5724, post-processing 0.6210, pre-processing 0.6929">
+                  <div class="bars-head"><span style="margin-right:auto">Test-set mF1</span><span class="key"><i class="k0"></i>Baseline</span><span class="key"><i class="k1"></i>With tissue map</span></div>
+                  <div class="bar-row"><span class="bl">No integration</span><div class="bt"><div class="b0" style="width:57.24%"></div></div><span class="bv">0.5724</span></div>
+                  <div class="bar-row"><span class="bl">Post-processing</span><div class="bt"><div class="b1" style="width:62.10%"></div></div><span class="bv">0.6210</span></div>
+                  <div class="bar-row"><span class="bl">Pre-processing</span><div class="bt"><div class="b1" style="width:69.29%"></div></div><span class="bv">0.6929</span></div>
+                </div>
+                <div class="nums">
+                  <div><b>+0.1205</b>mF1 gain (pre)</div>
+                  <div><b>0.7375</b>tumor recall (post)</div>
+                  <div><b>0.9092</b>tissue-map mF1 (SoftCTM 0.8951)</div>
+                </div>
+                <div class="qual">
+                  <div class="errs-label">Qualitative comparison — small FoV, ground truth, baseline, proposed</div>
+                  <figure class="figure qual-fig">
+                    <img src="img/qual_1.png" alt="Success case: cells the baseline model detected as non-tumor are correctly reclassified as tumor by the proposed model, matching the cell ground truth.">
+                    <p class="fig-desc"><b>Succeeds</b> — the tissue map is accurate, and cells the baseline misread as non-tumor are correctly reclassified as tumor.</p>
+                  </figure>
+                  <figure class="figure qual-fig">
+                    <img src="img/qual_2.png" alt="Limitation case: the tissue map is accurate, but non-tumor cells scattered inside a tumor cell cluster are still missed by both models.">
+                    <p class="fig-desc"><b>Accurate map, no gain</b> — non-tumor cells sit inside a dense tumor cluster; even a correct tissue map can't separate them.</p>
+                  </figure>
+                  <figure class="figure qual-fig">
+                    <img src="img/qual_3.png" alt="Limitation case: the tissue map itself is inaccurate, giving the cell detector no useful signal, so the proposed model does not improve on the baseline.">
+                    <p class="fig-desc"><b>Wrong map, no gain</b> — the tissue map is inaccurate here, so it gives the cell detector no useful signal to correct.</p>
+                  </figure>
+                </div>
+                <div class="errs">
+                  <div class="errs-label">Limits</div>
+                  <p class="gloss" style="margin:0">Absolute mF1 (0.6929) sits below prior work (0.7056, 0.7123); the gain is over the no-integration baseline. Scattered tumor cells gain little, even with a reliable map.</p>
+                </div>
+              </div>
+            </dl>
+            <div class="stack-row">
+              <span class="chip">Python</span><span class="chip">PyTorch</span><span class="chip">U-Net++ / SE-ResNet50</span><span class="chip">Attention U-Net / ResNet34</span><span class="chip">Weights &amp; Biases</span><span class="chip">Google Colab</span>
+            </div>
+            <div class="privacy-note">Fahlan, Koesoema, Gambetta · IUPESM 2025</div>
+          </div>
+        </div>
+      </article>
+
+      <article class="entry" id="anamnesis">
+        <div class="entry-head">
+          <div class="entry-title">
+            <span class="idx">02</span>
+            <h3>Anamnesis <em>Interpreter</em></h3>
+            <span class="sub">Voice-to-Text Extension</span>
+          </div>
+          <div class="entry-meta">
+            <span class="tag">2026</span>
+            <span class="tag">Solo</span>
+            <span class="tag status">Prototype</span>
+            <span class="tag warn">Not wired to form fill yet</span>
+          </div>
+        </div>
+        <p class="anam-def"><b>Anamnesis</b> is the patient history a doctor takes by talking with the patient. This tool listens to that conversation and fills in the screening form for them.</p>
+
+        <div class="anam">
+          <div class="anam-head"><span>THE CORE IDEA — SPEECH IN, EVIDENCED ANSWERS OUT</span><span class="tag status">Real recording · verbatim</span></div>
+          <div class="anam-grid">
+            <div>
+              <div class="anam-label">Spoken in the consultation (Whisper output)</div>
+              <p class="anam-quote"><mark>Ada saudara sekandung yang sakit hepatitis B?</mark> <mark>Enggak.</mark> Enggak ya?</p>
+              <p class="gloss">“Any siblings with hepatitis B?” “No.” “No, right?”</p>
+            </div>
+            <div>
+              <div class="anam-label">Form answers the model filled in</div>
+              <ul class="anam-list">
+                <li><span class="q">Apakah Anda memiliki ibu kandung/saudara sekandung yang menderita Hepatitis B?</span><span class="a">Tidak</span><span class="ev">“Ada saudara sekandung yang sakit hepatitis B? Enggak”</span></li>
+              </ul>
+            </div>
+          </div>
+          <div class="anam-foot">The patient answers a turn after the doctor asks. Each answer must match an allowed option and quote the transcript, or it is rejected.</div>
+        </div>
+
+        <div class="entry-body stacked">
+          <div>
+            <dl>
+              <div class="field"><dt>Aim</dt><dd>To build a pipeline that turns a spoken doctor–patient consultation into structured answers for a 128-question screening form.</dd></div>
+              <div class="field">
+                <dt>Approach</dt>
+                <dd>Audio in, validated answers out: Whisper transcribes the consultation, personal information is scrubbed out, then an LLM reads a sliding window of that transcript against the full question bank and answers only where it can point to supporting words in the transcript (FIG. 5).</dd>
+                <dd>A first pass with the extension's existing keyword matcher, tested against a real transcript, filled 0 of 17 — free speech doesn't line up with form wording. An ablation over window width — how many transcript segments the model sees per call — mattered more than any other setting tried, so the pipeline settled on a six-segment window.</dd>
+                <figure class="figure solo">
+                  <svg viewBox="0 0 520 150" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Pipeline: audio, Whisper, PII scrub, LLM window, validated form answers">
+                    <defs><marker id="ar" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="var(--ink-soft)"/></marker></defs>
+                    <rect x="1" y="1" width="518" height="148" fill="none" stroke="var(--line)" stroke-dasharray="3 3"/>
+
+                    <rect x="14" y="20" width="88" height="40" rx="2" fill="none" stroke="var(--blueprint)"/>
+                    <text x="58" y="37" text-anchor="middle" font-family="IBM Plex Mono" font-size="9.5" font-weight="600" fill="var(--ink)">AUDIO</text>
+                    <text x="58" y="50" text-anchor="middle" font-family="IBM Plex Mono" font-size="7" fill="var(--ink-soft)">consultation</text>
+                    <path d="M102 40 H132" stroke="var(--ink-soft)" marker-end="url(#ar)"/>
+
+                    <rect x="134" y="20" width="88" height="40" rx="2" fill="none" stroke="var(--blueprint)"/>
+                    <text x="178" y="37" text-anchor="middle" font-family="IBM Plex Mono" font-size="9.5" font-weight="600" fill="var(--ink)">WHISPER</text>
+                    <text x="178" y="50" text-anchor="middle" font-family="IBM Plex Mono" font-size="7" fill="var(--ink-soft)">transcript</text>
+                    <path d="M222 40 H252" stroke="var(--ink-soft)" marker-end="url(#ar)"/>
+
+                    <rect x="254" y="20" width="88" height="40" rx="2" fill="none" stroke="var(--amber)"/>
+                    <text x="298" y="37" text-anchor="middle" font-family="IBM Plex Mono" font-size="9.5" font-weight="600" fill="var(--ink)">PII SCRUB</text>
+                    <text x="298" y="50" text-anchor="middle" font-family="IBM Plex Mono" font-size="7" fill="var(--ink-soft)">before the LLM call</text>
+                    <path d="M342 40 H372" stroke="var(--ink-soft)" marker-end="url(#ar)"/>
+
+                    <rect x="374" y="20" width="98" height="40" rx="2" fill="var(--blueprint-soft)" stroke="var(--blueprint)"/>
+                    <text x="423" y="35" text-anchor="middle" font-family="IBM Plex Mono" font-size="9.5" font-weight="600" fill="var(--ink)">LLM WINDOW</text>
+                    <text x="423" y="47" text-anchor="middle" font-family="IBM Plex Mono" font-size="6.5" fill="var(--ink-soft)">6 segments · full bank</text>
+
+                    <path d="M423 60 V95 H298" fill="none" stroke="var(--ink-soft)"/>
+                    <path d="M298 95 V116" fill="none" stroke="var(--ink-soft)" marker-end="url(#ar)"/>
+                    <rect x="188" y="118" width="220" height="26" rx="2" fill="none" stroke="var(--blueprint)"/>
+                    <text x="298" y="135" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" font-weight="600" fill="var(--ink)">VALIDATED FORM ANSWERS</text>
+                  </svg>
+                  <figcaption>FIG. 5 — speech to validated form answers</figcaption>
+                </figure>
+              </div>
+              <div class="field">
+                <dt>Outcome</dt>
+                <dd>On one 6.3-minute recording, the pipeline got 21–26 of the 39 questions the doctor asked right.</dd>
+                <div class="bars" role="img" aria-label="Precision rose from 62 to 79 percent and recall from 33 to 67 percent">
+                  <div class="bars-head"><span style="margin-right:auto">Best run</span><span class="key"><i class="k0"></i>First version</span><span class="key"><i class="k1"></i>Current</span></div>
+                  <div class="bar-row"><span class="bl">Precision</span><div class="bt"><div class="b0" style="width:62%"></div><div class="b1" style="width:79%"></div></div><span class="bv">62% → 79%</span></div>
+                  <div class="bar-row"><span class="bl">Recall</span><div class="bt"><div class="b0" style="width:33%"></div><div class="b1" style="width:67%"></div></div><span class="bv">33% → 67%</span></div>
+                </div>
+                <div class="nums">
+                  <div><b>13 → 26</b>correct of 39 asked (best run)</div>
+                  <div><b>~46 s → &lt;6 s</b>median lag</div>
+                </div>
+                <div class="errs">
+                  <div class="errs-label">Best run errors: 7 wrong of 33 answered, 10 missed</div>
+                  <div class="errs-bar"><i class="e-ok" style="flex:26"></i><i class="e-wrong" style="flex:3"></i><i class="e-hall" style="flex:4"></i><i class="e-miss" style="flex:10"></i></div>
+                  <div class="errs-key"><span><i class="e-ok"></i>26 correct</span><span><i class="e-wrong"></i>3 wrong value</span><span><i class="e-hall"></i>4 answered but never asked</span><span><i class="e-miss"></i>10 missed</span></div>
+                </div>
+              </div>
+            </dl>
+            <div class="stack-row">
+              <span class="chip">Python</span><span class="chip">FastAPI</span><span class="chip">faster-whisper</span><span class="chip">DeepSeek via OpenRouter</span><span class="chip">Chrome extension (MV3, JavaScript)</span><span class="chip">Ollama / Qwen (tested)</span>
+            </div>
+            <div class="privacy-note">Private repo. Patient data withheld.</div>
+          </div>
+        </div>
+      </article>
+
+      <article class="entry" id="virtual-screening">
+        <div class="entry-head">
+          <div class="entry-title">
+            <span class="idx">03</span>
+            <h3>Virtual Screening <em>Pipeline</em></h3>
+            <span class="sub">SBVS proof of concept · SARS-CoV-2 Mpro</span>
+          </div>
+          <div class="entry-meta">
+            <span class="tag">2026</span>
+            <span class="tag status">Prototype</span>
+            <span class="tag warn">Ranking not validated</span>
+          </div>
+        </div>
+
+        <p class="anam-def"><b>Virtual screening</b> docks a library of small molecules into a protein pocket and ranks them by predicted binding, to choose which ones are worth testing in the lab.</p>
+
+        <div class="entry-body stacked">
+          <div>
+            <dl>
+              <div class="field"><dt>Aim</dt><dd>To build a structure-based virtual screening pipeline and test whether a consensus of docking (Vina, DiffDock) and rescoring (GNINA, Boltz-2) ranks known actives near the top of a library. Pilot target: SARS-CoV-2 main protease (PDB 6LU7).</dd></div>
+              <div class="field exploration">
+              <div class="anam">
+                <div class="anam-head"><span>EXPLORATION — THREE CHECKS BEFORE TRUSTING THE SCORES</span><span class="tag status">Pilot: 50 compounds + 5 known actives</span></div>
+                <div class="xcards">
+                  <div class="xcard">
+                    <div class="xnum">0.104</div>
+                    <div class="xlab">kcal/mol median spread, 5 Vina seeds</div>
+                    <p>Vina converged. Cost tracked exhaustiveness, not box size (204 s at 8,000 Å³ vs 193 s at 14,549 Å³).</p>
+                  </div>
+                  <div class="xcard">
+                    <div class="xnum">ρ = 0.28</div>
+                    <div class="xlab">Vina vs DiffDock rank agreement, n = 47</div>
+                    <p>The two docking engines barely agree; their top 5s share one compound.</p>
+                  </div>
+                  <div class="xcard">
+                    <div class="xnum">top 5 of 47</div>
+                    <div class="xlab">Boltz-2 rank of the 5 known actives</div>
+                    <p>Median score 0.987 vs 0.230 for the rest. The actives are also heavier (median MW 483 vs 390), so size may explain part of it.</p>
+                  </div>
+                </div>
+                <div class="anam-foot">Setup bugs caught on the way: a drug-likeness filter that rejected known actives, a wrong pocket centre from hetero-atom-only ligand selection, DiffDock's config file overriding command-line arguments, and GNINA rejecting multi-model files.</div>
+              </div>
+              </div>
+              <div class="field">
+                <dt>Approach</dt>
+                <dd>Protein and library go in, a ranked and explained shortlist comes out: both are prepared, every compound is docked two ways and rescored two more ways, ranks are averaged across methods, and the result is written up as a report with a 3D viewer (FIG. 6).</dd>
+                <dd>The three checks above set the design. Convergence fixed Vina at 16 exhaustiveness with 5 seeds, and the weak agreement between engines is why no single score is trusted on its own.</dd>
+                <figure class="figure solo wide-solo">
+                  <svg viewBox="0 0 540 84" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Pipeline: prep, dock with Vina and DiffDock, rescore with GNINA and Boltz-2, rank-average consensus, report">
+                    <defs><marker id="ar6" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="var(--ink-soft)"/></marker></defs>
+                    <rect x="1" y="1" width="538" height="82" fill="none" stroke="var(--line)" stroke-dasharray="3 3"/>
+                    <rect x="8" y="16" width="86" height="52" rx="2" fill="none" stroke="var(--blueprint)"/>
+                    <text x="51" y="36" text-anchor="middle" font-family="IBM Plex Mono" font-size="8.5" font-weight="600" fill="var(--ink)">PREP</text>
+                    <text x="51" y="49" text-anchor="middle" font-family="IBM Plex Mono" font-size="6.5" fill="var(--ink-soft)">receptor + ligands</text>
+                    <text x="51" y="58" text-anchor="middle" font-family="IBM Plex Mono" font-size="6.5" fill="var(--ink-soft)">pocket from ligand</text>
+                    <path d="M94 42 H112" stroke="var(--ink-soft)" marker-end="url(#ar6)"/>
+                    <rect x="114" y="16" width="86" height="52" rx="2" fill="none" stroke="var(--blueprint)"/>
+                    <text x="157" y="36" text-anchor="middle" font-family="IBM Plex Mono" font-size="8.5" font-weight="600" fill="var(--ink)">DOCK</text>
+                    <text x="157" y="49" text-anchor="middle" font-family="IBM Plex Mono" font-size="6.5" fill="var(--ink-soft)">Vina</text>
+                    <text x="157" y="58" text-anchor="middle" font-family="IBM Plex Mono" font-size="6.5" fill="var(--ink-soft)">DiffDock-L</text>
+                    <path d="M200 42 H218" stroke="var(--ink-soft)" marker-end="url(#ar6)"/>
+                    <rect x="220" y="16" width="86" height="52" rx="2" fill="none" stroke="var(--blueprint)"/>
+                    <text x="263" y="36" text-anchor="middle" font-family="IBM Plex Mono" font-size="8.5" font-weight="600" fill="var(--ink)">RESCORE</text>
+                    <text x="263" y="49" text-anchor="middle" font-family="IBM Plex Mono" font-size="6.5" fill="var(--ink-soft)">GNINA · Boltz-2</text>
+                    <text x="263" y="58" text-anchor="middle" font-family="IBM Plex Mono" font-size="6.5" fill="var(--ink-soft)">+ PLIP contacts</text>
+                    <path d="M306 42 H324" stroke="var(--ink-soft)" marker-end="url(#ar6)"/>
+                    <rect x="326" y="16" width="86" height="52" rx="2" fill="var(--blueprint-soft)" stroke="var(--blueprint)"/>
+                    <text x="369" y="36" text-anchor="middle" font-family="IBM Plex Mono" font-size="8.5" font-weight="600" fill="var(--ink)">CONSENSUS</text>
+                    <text x="369" y="49" text-anchor="middle" font-family="IBM Plex Mono" font-size="6.5" fill="var(--ink-soft)">average of ranks</text>
+                    <text x="369" y="58" text-anchor="middle" font-family="IBM Plex Mono" font-size="6.5" fill="var(--ink-soft)">across methods</text>
+                    <path d="M412 42 H430" stroke="var(--ink-soft)" marker-end="url(#ar6)"/>
+                    <rect x="432" y="16" width="98" height="52" rx="2" fill="none" stroke="var(--amber)"/>
+                    <text x="481" y="36" text-anchor="middle" font-family="IBM Plex Mono" font-size="8.5" font-weight="600" fill="var(--ink)">REPORT</text>
+                    <text x="481" y="49" text-anchor="middle" font-family="IBM Plex Mono" font-size="6.5" fill="var(--ink-soft)">HTML + 3D viewer</text>
+                    <text x="481" y="58" text-anchor="middle" font-family="IBM Plex Mono" font-size="6.5" fill="var(--ink-soft)">served by Flask</text>
+                  </svg>
+                  <figcaption>FIG. 6 — from protein and library to a ranked, explained shortlist</figcaption>
+                </figure>
+                <div class="choice-wrap">
+                  <table class="choice">
+                    <thead><tr><th>Choice</th><th>What led to it</th><th>Alternative</th></tr></thead>
+                    <tbody>
+                      <tr><td>Vina: exhaustiveness 16, 5 seeds</td><td>Seed-convergence check</td><td>Exhaustiveness 8 (62.5 s per run)</td></tr>
+                      <tr><td>Rank Boltz-2 on <code>affinity_probability_binary</code></td><td>Its documentation, not an experiment. The other field is only meant for comparing actives.</td><td><code>affinity_pred_value</code></td></tr>
+                      <tr><td>Known actives pass the same filters</td><td>An exempt set would be separable by size alone</td><td>Exempting them</td></tr>
+                      <tr><td>Rank-average consensus (v1)</td><td>Needs no labels. The weak ρ = 0.28 suggests it may dilute Boltz-2.</td><td>Learned re-ranker, which needs labelled data</td></tr>
+                      <tr><td>Boltz-2 MSA</td><td>Still undecided</td><td>Single sequence vs a public MSA server</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <div class="field">
+                <dt>Outcome</dt>
+                <dd>All six stage gates passed, so the pipeline runs end to end. Whether it ranks well is a different question, and the answer so far is mixed: the consensus beats Vina alone but not Boltz-2 alone.</dd>
+                <figure class="figure solo wide-solo">
+                  <svg viewBox="0 0 540 150" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Rank of the five known actives among 48 compounds. Vina alone: 1, 17, 23, 25, 26. Consensus: 1, 2, 3, 5, 7. Boltz-2 alone: 1 to 5.">
+                    <rect x="1" y="1" width="538" height="148" fill="none" stroke="var(--line)" stroke-dasharray="3 3"/>
+                    <text x="14" y="22" font-family="IBM Plex Mono" font-size="8.5" fill="var(--ink-soft)">RANK OF THE 5 KNOWN ACTIVES · 1 = BEST</text>
+                    <g font-family="IBM Plex Mono" font-size="8.5" fill="var(--ink)">
+                      <text x="14" y="55">Vina alone</text>
+                      <text x="14" y="85">Consensus</text>
+                      <text x="14" y="115">Boltz-2 alone</text>
+                    </g>
+                    <g stroke="var(--line-strong)">
+                      <line x1="110" y1="52" x2="520" y2="52"/>
+                      <line x1="110" y1="82" x2="520" y2="82"/>
+                      <line x1="110" y1="112" x2="520" y2="112"/>
+                    </g>
+                    <g fill="var(--line-strong)" stroke="var(--ink-soft)">
+                      <circle cx="110" cy="52" r="5"/><circle cx="249.6" cy="52" r="5"/><circle cx="301.9" cy="52" r="5"/><circle cx="319.4" cy="52" r="5"/><circle cx="328.1" cy="52" r="5"/>
+                    </g>
+                    <g fill="var(--amber)">
+                      <circle cx="110" cy="82" r="5"/><circle cx="118.7" cy="82" r="5"/><circle cx="127.4" cy="82" r="5"/><circle cx="144.8" cy="82" r="5"/><circle cx="162.3" cy="82" r="5"/>
+                    </g>
+                    <g fill="var(--blueprint)">
+                      <circle cx="110" cy="112" r="5"/><circle cx="118.7" cy="112" r="5"/><circle cx="127.4" cy="112" r="5"/><circle cx="136.1" cy="112" r="5"/><circle cx="144.8" cy="112" r="5"/>
+                    </g>
+                    <g font-family="IBM Plex Mono" font-size="8" fill="var(--ink-soft)" text-anchor="middle">
+                      <text x="110" y="135">1</text><text x="206" y="135">12</text><text x="310.6" y="135">24</text><text x="415.3" y="135">36</text><text x="520" y="135">48</text>
+                    </g>
+                  </svg>
+                  <figcaption>FIG. 7 — where the five known actives landed among 48 compounds (Boltz-2 ranked 47)</figcaption>
+                </figure>
+                <div class="nums">
+                  <div><b>6 / 6</b>stage gates passed</div>
+                  <div><b>1, 2, 3, 5, 7</b>consensus ranks of the actives</div>
+                  <div><b>87 / h</b>ligands docked by Vina</div>
+                </div>
+                <div class="qual">
+                  <div class="errs-label">The report the pipeline produces, from a 5-compound run</div>
+                  <figure class="figure qual-fig">
+                    <video class="demo-video" controls muted playsinline preload="metadata" poster="img/sbvs_poster.png" src="img/sbvs_demo.mp4">Your browser can't play this video; the poster frame shows the report's first screen.</video>
+                    <p class="fig-desc"><b>Screen recording, 56 s</b> — top hit with its property profile, each scorer in its own units, key protein contacts, a rotatable 3D pose, the ranking table, and the report's own caveats. The DiffDock column is empty in this demo run.</p>
+                  </figure>
+                  <p class="fig-desc"><b>What held up.</b> The top protein contacts on the best Vina poses (GLN189, HIS41, GLU166, MET165, MET49) are canonical Mpro active-site residues, which supports the pocket and receptor setup.</p>
+                  <p class="fig-desc"><b>What didn't.</b> Vina alone showed no enrichment of the known actives, and four Vina runs timed out, all stereoisomers of one compound.</p>
+                </div>
+                <div class="errs">
+                  <div class="errs-label">Limits</div>
+                  <p class="gloss" style="margin:0">Only 5 known actives, heavier and more polar than the background, so size is a confound. The reference structure (6LU7) is covalently bound, so redocking RMSD is not valid validation. The pilot is small (50 compounds), and there is no labelled benchmark yet. Next: a benchmark, a learned re-ranker, and the Boltz-2 MSA decision.</p>
+                </div>
+              </div>
+            </dl>
+            <div class="stack-row">
+              <span class="chip">Python</span><span class="chip">RDKit</span><span class="chip">AutoDock Vina</span><span class="chip">DiffDock-L</span><span class="chip">Boltz-2</span><span class="chip">GNINA</span><span class="chip">PLIP</span><span class="chip">OpenMM</span><span class="chip">Flask</span><span class="chip">pytest</span>
+            </div>
+            <div class="privacy-note">Private repo. Server details, credentials and partner information withheld.</div>
+          </div>
+        </div>
+      </article>
+
+      <article class="entry" id="optic-disc-cup">
+        <div class="entry-head">
+          <div class="entry-title">
+            <span class="idx">04</span>
+            <h3>Optic Disc &amp; <em>Cup Segmentation</em></h3>
+            <span class="sub">Drishti-GS dataset</span>
+          </div>
+          <div class="entry-meta">
+            <span class="tag">2026</span>
+            <span class="tag">Team of 2</span>
+            <span class="tag status">Shipped</span>
+            <span class="tag">EB3206 coursework</span>
+          </div>
+        </div>
+
+        <p class="anam-def"><b>Cup-to-disc ratio</b> — the size of the optic cup relative to the optic disc — is the primary sign doctors screen for in glaucoma. Both have to be segmented first.</p>
+
+        <div class="entry-body stacked">
+          <div>
+            <dl>
+              <div class="field"><dt>Aim</dt><dd>Can classical computer vision — no deep learning — segment the optic disc and cup accurately enough to compute a reliable cup-to-disc ratio?</dd></div>
+              <div class="field exploration">
+                <div class="anam">
+                  <div class="anam-head"><span>EXPLORATION — WHERE THE DISC IS, AND WHICH CHANNEL SEES IT</span><span class="tag status">EDA findings</span></div>
+                  <ul class="leads">
+                    <li><span class="f">The optic disc centre sits in a consistent region across every image (mean box about 383 × 337 px).</span><span class="ar">→</span><span class="d">Find it with a 330 px sliding window, sized from those boxes, instead of searching the whole image.</span></li>
+                  </ul>
+                  <img class="anam-photo wide" src="img/ocod_cv.png" alt="Per-channel breakdown of a fundus image: original, red, green, blue and greyscale. The red channel shows the sharpest contrast between the optic disc and the surrounding tissue.">
+                  <p class="gloss" style="margin:0 0 12px">Per-channel contrast around the optic disc: original, red, green, blue, greyscale.</p>
+                  <ul class="leads">
+                    <li><span class="f">The red channel gives the clearest contrast between disc and surrounding tissue.</span><span class="ar">→</span><span class="d">Segment the disc by Otsu thresholding on red. For the cup, green and blue were tried too and gave poor results, so red is used there as well.</span></li>
+                    <li><span class="f">Equalizing the localized region spreads its intensities, which should make the cup easier to separate. The cup-to-disc size ratio suggests a few intensity clusters.</span><span class="ar">→</span><span class="d">Test four k-means variants (k = 3 or 4, raw or equalized red). Raw red with k = 4 scored best, so the final pipeline skips equalization.</span></li>
+                  </ul>
+                </div>
+              </div>
+              <div class="field">
+                <dt>Approach</dt>
+                <dd>Five steps, each choice following from the exploration above:</dd>
+                <ol class="steps">
+                  <li><b>Localize the disc.</b> A 330 px sliding window over the greyscale image, taking the brightest region.</li>
+                  <li><b>Segment the disc.</b> Otsu threshold on the red channel of that region.</li>
+                  <li><b>Clean the disc mask.</b> Morphological opening, then closing (disk radius 30), then fit an ellipse to the contour.</li>
+                  <li><b>Segment the cup.</b> Inside the localized disc, k-means clustering (k = 4) on the red channel again (green and blue gave poor cup results); the brightest cluster is the cup.</li>
+                  <li><b>Clean the cup mask.</b> Closing, then opening (disk radius 30), then the same ellipse fit.</li>
+                </ol>
+                <dd>The disk radii were set empirically, and k = 4 was picked by F1 across the four variants.</dd>
+              </div>
+              <div class="field">
+                <dt>Outcome</dt>
+                <dd>Disc segmentation is consistently strong; cup segmentation is harder, and fitting an ellipse to the result recovers about 8 points of F1.</dd>
+                <div class="bars wide" role="img" aria-label="Test-set F1: optic disc 0.955 raw, 0.943 after ellipse fit; optic cup 0.735 raw, 0.808 after ellipse fit">
+                  <div class="bars-head"><span style="margin-right:auto">Test-set F1</span><span class="key"><i class="k0"></i>Segmentation</span><span class="key"><i class="k1"></i>+ Ellipse fit</span></div>
+                  <div class="bar-row"><span class="bl">Optic disc</span><div class="bt"><div class="b0" style="width:95.5%"></div><div class="b1" style="width:94.3%"></div></div><span class="bv">0.955 → 0.943</span></div>
+                  <div class="bar-row"><span class="bl">Optic cup</span><div class="bt"><div class="b0" style="width:73.5%"></div><div class="b1" style="width:80.8%"></div></div><span class="bv">0.735 → 0.808</span></div>
+                </div>
+                <div class="nums">
+                  <div><b>100%</b>disc localization coverage</div>
+                  <div><b>+8 pts</b>cup F1 from ellipse fit</div>
+                  <div><b>0.947</b>mean disc F1 (val)</div>
+                </div>
+                <div class="qual">
+                  <div class="errs-label">Ellipse fit, and the disc evaluation map</div>
+                  <figure class="figure qual-fig">
+                    <img src="img/ocod_eht.png" alt="Optic cup mask before and after fitting an ellipse: the raw mask is a rough blob, the ellipse fit is smooth and anatomically plausible.">
+                    <p class="fig-desc"><b>Regularizing the cup</b> — the raw mask is a rough blob; fitting an ellipse gives a smooth boundary matching real anatomy, which is most of the 8-point gain.</p>
+                  </figure>
+                  <figure class="figure qual-fig">
+                    <img src="img/ocod_tp.png" alt="Evaluation map for one optic disc result: mostly green (true positive) with a thin red rim (false negative) at the boundary.">
+                    <p class="fig-desc"><b>Where disc errors live</b> — almost entirely true positive (green), with the small miss concentrated in a thin rim (red) at the boundary.</p>
+                  </figure>
+                </div>
+                <div class="errs">
+                  <div class="errs-label">Limits</div>
+                  <p class="gloss" style="margin:0">Disc localization scans the full image, which is computationally wasteful. Disc radius and the cup's k=4 were tuned on this dataset and may not generalize to others. A deep-learning cup segmenter would likely score higher.</p>
+                </div>
+              </div>
+            </dl>
+            <div class="stack-row">
+              <span class="chip">Python</span><span class="chip">NumPy</span><span class="chip">OpenCV</span><span class="chip">scikit-image</span><span class="chip">SciPy</span><span class="chip">Matplotlib</span><span class="chip">Classical CV, no deep learning</span>
+            </div>
+            <div class="privacy-note">Public repo · Drishti-GS dataset (101 fundus images)</div>
+          </div>
+        </div>
+      </article>
+
+      <article class="entry" id="doc-extractor">
+        <div class="entry-head">
+          <div class="entry-title">
+            <span class="idx">05</span>
+            <h3>Doc-<em>Extractor</em></h3>
+            <span class="sub">describe the data, get a table</span>
+          </div>
+          <div class="entry-meta">
+            <span class="tag">2026</span>
+            <span class="tag">Solo</span>
+            <span class="tag status">Prototype</span>
+            <span class="tag warn">Runs locally</span>
+          </div>
+        </div>
+
+        <p class="anam-def"><b>Doc-Extractor</b> fills a table from documents. You describe the data you want, and it pulls the values out instead of you copying them by hand.</p>
+
+        <figure class="figure hero-fig">
+          <img src="img/de_card.png" alt="Dataset card titled Suspek Dengue Per Provinsi, with the prompt, five sample rows of provinces and suspected case counts, a LIVE badge and 38 rows.">
+          <figcaption>The demo dataset: suspected dengue cases per province, live, 38 rows</figcaption>
+        </figure>
+
+        <div class="entry-body stacked">
+          <div>
+            <dl>
+              <div class="field"><dt>Aim</dt><dd>To build a tool where you describe the data you need and a table fills itself from documents, instead of copying values out by hand.</dd></div>
+              <div class="field exploration">
+                <div class="anam">
+                  <div class="anam-head"><span>EXPLORATION — WHAT BROKE ON A REAL 85-PAGE HEALTH REPORT</span><span class="tag status">Findings</span></div>
+                  <ul class="leads">
+                    <li><span class="f">Reading the PDF in stream order interleaves side-by-side blocks: a heading arrives after the bullets it labels, and narrative runs into chart titles and axis values.</span><span class="ar">→</span><span class="d">Recover the page layout geometrically (recursive XY-cut) before any model reads it.</span></li>
+                    <li><span class="f">Judging a whole page biases toward its dominant topic, so one relevant sentence among unrelated tables gets lost.</span><span class="ar">→</span><span class="d">Classify chunks, not pages. Over-select first, then prune with the candidates side by side.</span></li>
+                    <li><span class="f">Given every retrieved page in one call, the model extracted a plausible subset of rows and stopped. Two different models did the same.</span><span class="ar">→</span><span class="d">Extract in small batches, and escalate only the low-confidence batches to a stronger model.</span></li>
+                  </ul>
+                </div>
+              </div>
+              <div class="field">
+                <dt>Approach</dt>
+                <dd>Two versions fill the same live table (FIG. 8). Version 1 reads a PDF or URL you provide: it parses the page layout, retrieves the relevant pages, and extracts rows in batches. Version 2 searches the web, restricted to trusted health sources (Kemenkes, WHO), and every row keeps the quoted evidence it came from.</dd>
+                <dd>The findings above set Version 1's design. Version 2 trades your own document for source control: only allowlisted sites are read, so each value can be traced back.</dd>
+                <figure class="figure solo wide-solo diagram-fig">
+                  <img src="img/de_diagram.svg" alt="Two lanes feeding one live table. Version 1: PDF or URL, layout-aware text, page retrieval, batched extraction. Version 2: your prompt, restricted search, fetch pages, extraction with sources.">
+                  <figcaption>FIG. 8 — two ways to fill one table</figcaption>
+                </figure>
+                <figure class="figure solo wide-solo">
+                  <img src="img/de_wizard.jpg" alt="Source picker screen: upload a PDF or paste a URL, describe what to extract, then generate a schema.">
+                  <figcaption>Source picker: upload a PDF or paste a URL, then describe the data</figcaption>
+                </figure>
+              </div>
+              <div class="field">
+                <dt>Outcome</dt>
+                <dd>In the Version 1 eval, the pipeline found every target row and most of the labels were correct. That run used a prompt hint that was later removed and has not been re-run, so read it as indicative. The live demo table holds 38 provinces of case counts. Version 2 has not been measured yet.</dd>
+                <figure class="figure solo wide-solo">
+                  <img src="img/de_live_table.jpg" alt="Live table of suspected dengue cases per province, with Jawa Barat, Jawa Timur and Jawa Tengah at the top.">
+                  <figcaption>The live table: suspected dengue cases per province, from a weekly national surveillance report</figcaption>
+                </figure>
+                <div class="nums">
+                  <div><b>38</b>rows in the live demo table</div>
+                  <div><b>2</b>versions sharing one table UI</div>
+                </div>
+                <div class="errs">
+                  <div class="errs-label">Limits</div>
+                  <p class="gloss" style="margin:0">The accuracy check is one run on one report, with a hint that no longer exists. Version 2 has no numbers. The app runs locally only.</p>
+                </div>
+              </div>
+            </dl>
+            <div class="stack-row">
+              <span class="chip">Python</span><span class="chip">pdfplumber</span><span class="chip">TypeScript</span><span class="chip">pdf.js</span><span class="chip">Next.js</span><span class="chip">Fastify</span><span class="chip">Mastra</span><span class="chip">Convex</span><span class="chip">Docker</span><span class="chip">OpenRouter</span>
+            </div>
+            <div class="privacy-note">UI and stack built on the open-source bigset project (AGPL).</div>
+          </div>
+        </div>
+      </article>
+
+    </section>
+
+    <footer class="foot">
+      <span>Dwi Rezky Fahlan</span>
+      <span>Research projects · 2026</span>
+    </footer>
+  </main>
+</div>
+
+<script>
+  (function(){
+    try{
+      var btn = document.getElementById('menuBtn');
+      var drop = document.getElementById('railDrop');
+      btn.addEventListener('click', function(){
+        var open = drop.classList.toggle('open');
+        btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+      });
+      drop.querySelectorAll('a').forEach(function(a){
+        a.addEventListener('click', function(){ drop.classList.remove('open'); btn.setAttribute('aria-expanded','false'); });
+      });
+    }catch(e){}
+    try{
+      var links = document.querySelectorAll('.rail-nav a');
+      var io = new IntersectionObserver(function(entries){
+        entries.forEach(function(entry){
+          if(!entry.isIntersecting) return;
+          links.forEach(function(l){ l.classList.toggle('active', l.getAttribute('href') === '#' + entry.target.id); });
+        });
+      }, { rootMargin: '-40% 0px -55% 0px' });
+      links.forEach(function(l){ var s = document.querySelector(l.getAttribute('href')); if(s) io.observe(s); });
+    }catch(e){}
+  })();
+</script>
+</body>
+</html>
