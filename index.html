@@ -452,10 +452,20 @@
           <div>
             <dl>
               <div class="field"><dt>Aim</dt><dd>To build a pipeline that turns a spoken doctor–patient consultation into structured answers for a 128-question screening form.</dd></div>
+              <div class="field exploration">
+                <div class="anam">
+                  <div class="anam-head"><span>EXPLORATION — WHAT MOVED THE RESULT, AND WHAT DIDN'T</span><span class="tag status">One recording</span></div>
+                  <ul class="leads">
+                    <li><span class="f">The extension's existing keyword matcher, tested on a real transcript, filled 0 of 17 answers.</span><span class="ar">→</span><span class="d">Free speech doesn't match form wording, so an LLM reads the transcript against the questions instead.</span></li>
+                    <li><span class="f">Window size drove recall: 13 of 39 correct at 3 segments, 26 at 6. The revision rule alone added nothing at 3 segments (14 vs 13).</span><span class="ar">→</span><span class="d">Use a six-segment sliding window.</span></li>
+                    <li><span class="f">Denoising the audio before Whisper made transcripts worse: word error rate rose from 40% to 56–73% across three denoisers.</span><span class="ar">→</span><span class="d">Leave denoising out of the pipeline.</span></li>
+                  </ul>
+                </div>
+              </div>
               <div class="field">
                 <dt>Approach</dt>
                 <dd>Audio in, validated answers out: Whisper transcribes the consultation, personal information is scrubbed out, then an LLM reads a sliding window of that transcript against the full question bank and answers only where it can point to supporting words in the transcript (FIG. 5).</dd>
-                <dd>A first pass with the extension's existing keyword matcher, tested against a real transcript, filled 0 of 17 — free speech doesn't line up with form wording. An ablation over window width — how many transcript segments the model sees per call — mattered more than any other setting tried, so the pipeline settled on a six-segment window.</dd>
+                <dd>The same pipeline runs against a hosted model, with personal information scrubbed first, or against a local model on a server you control, so no transcript leaves it. The local runs add guards against invented answers: a number check, a topic gate and a character n-gram gate.</dd>
                 <figure class="figure solo">
                   <svg viewBox="0 0 520 150" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Pipeline: audio, Whisper, PII scrub, LLM window, validated form answers">
                     <defs><marker id="ar" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="var(--ink-soft)"/></marker></defs>
@@ -490,25 +500,45 @@
               </div>
               <div class="field">
                 <dt>Outcome</dt>
-                <dd>On one 6.3-minute recording, the pipeline got 21–26 of the 39 questions the doctor asked right.</dd>
-                <div class="bars" role="img" aria-label="Precision rose from 62 to 79 percent and recall from 33 to 67 percent">
-                  <div class="bars-head"><span style="margin-right:auto">Best run</span><span class="key"><i class="k0"></i>First version</span><span class="key"><i class="k1"></i>Current</span></div>
-                  <div class="bar-row"><span class="bl">Precision</span><div class="bt"><div class="b0" style="width:62%"></div><div class="b1" style="width:79%"></div></div><span class="bv">62% → 79%</span></div>
-                  <div class="bar-row"><span class="bl">Recall</span><div class="bt"><div class="b0" style="width:33%"></div><div class="b1" style="width:67%"></div></div><span class="bv">33% → 67%</span></div>
+                <dd>On one 6.3-minute recording, the best hosted run answered 26 of the 39 questions correctly (precision 79%, recall 67%), up from 13 with a 3-segment window. Three later runs of the same configuration scored 22 to 28 correct at 48–67% precision, so 79% is the top of a range. All figures are in-sample: the filters, window and question bank were tuned on this recording.</dd>
+                <div class="bars" role="img" aria-label="Precision rose from 57 to 79 percent and recall from 33 to 67 percent, best run">
+                  <div class="bars-head"><span style="margin-right:auto">Best run</span><span class="key"><i class="k0"></i>Window 3</span><span class="key"><i class="k1"></i>Window 6</span></div>
+                  <div class="bar-row"><span class="bl">Precision</span><div class="bt"><div class="b0" style="width:56.5%"></div><div class="b1" style="width:78.8%"></div></div><span class="bv">57% → 79%</span></div>
+                  <div class="bar-row"><span class="bl">Recall</span><div class="bt"><div class="b0" style="width:33.3%"></div><div class="b1" style="width:66.7%"></div></div><span class="bv">33% → 67%</span></div>
                 </div>
                 <div class="nums">
                   <div><b>13 → 26</b>correct of 39 asked (best run)</div>
-                  <div><b>~46 s → &lt;6 s</b>median lag</div>
+                  <div><b>46 s → 7 s</b>median lag with 3 concurrent calls (P90 79 s → 11 s)</div>
                 </div>
                 <div class="errs">
                   <div class="errs-label">Best run errors: 7 wrong of 33 answered, 10 missed</div>
                   <div class="errs-bar"><i class="e-ok" style="flex:26"></i><i class="e-wrong" style="flex:3"></i><i class="e-hall" style="flex:4"></i><i class="e-miss" style="flex:10"></i></div>
                   <div class="errs-key"><span><i class="e-ok"></i>26 correct</span><span><i class="e-wrong"></i>3 wrong value</span><span><i class="e-hall"></i>4 answered but never asked</span><span><i class="e-miss"></i>10 missed</span></div>
                 </div>
+                <div class="qual">
+                  <div class="errs-label">Hosted vs local model, same recording</div>
+                  <div class="choice-wrap">
+                    <table class="choice">
+                      <thead><tr><th>Setup</th><th>Correct of 39</th><th>Precision</th><th>Recall</th></tr></thead>
+                      <tbody>
+                        <tr><td>Hosted (DeepSeek), best run</td><td>26</td><td>79%</td><td>67%</td></tr>
+                        <tr><td>Hosted, three later runs</td><td>22–28</td><td>48–67%</td><td>56–72%</td></tr>
+                        <tr><td>Local Qwen2.5-7B, one V100</td><td>16</td><td>47%</td><td>41%</td></tr>
+                        <tr><td>Local Qwen3.5-9B, one T4</td><td>27</td><td>57%</td><td>69%</td></tr>
+                      </tbody>
+                    </table>
+                  </div>
+                  <p class="fig-desc"><b>Reading the table.</b> The 9B local model on a single T4 landed inside the range of the hosted model's repeat runs, with patient text never leaving the server. The local Qwen2.5 server also gave identical results on repeat, where the hosted model varied by 2–3 correct answers.</p>
+                  <p class="fig-desc"><b>Speed.</b> A local call takes about 1 s (median 0.9 s, P90 6.8 s for the 9B). End-to-end lag with a local model has not been measured.</p>
+                </div>
+                <div class="errs">
+                  <div class="errs-label">Limits</div>
+                  <p class="gloss" style="margin:0">One recording, tuned on it, with no held-out test. The window and revision rule were not re-ablated on the local model, and hosted cost is unmeasured. A 62-question pre-filtered bank reached 82% recall, but against a narrower 34-item reference, so it is not comparable.</p>
+                </div>
               </div>
             </dl>
             <div class="stack-row">
-              <span class="chip">Python</span><span class="chip">FastAPI</span><span class="chip">faster-whisper</span><span class="chip">DeepSeek via OpenRouter</span><span class="chip">Chrome extension (MV3, JavaScript)</span><span class="chip">Ollama / Qwen (tested)</span>
+              <span class="chip">Python</span><span class="chip">FastAPI</span><span class="chip">faster-whisper</span><span class="chip">DeepSeek via OpenRouter</span><span class="chip">Chrome extension (MV3, JavaScript)</span><span class="chip">Qwen2.5-7B · Qwen3.5-9B via Ollama (local)</span>
             </div>
             <div class="privacy-note">Private repo. Patient data withheld.</div>
           </div>
