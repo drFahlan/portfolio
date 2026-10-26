@@ -283,6 +283,9 @@
   .figure.solo{ max-width:460px; }
   .figure.wide-solo{ max-width:500px; }
   .hero-fig{ max-width:300px; }
+  .anam-photo.demo{ max-width:100%; }
+  .anam-note{ margin:10px 0 0; font-size:13px; color:var(--ink-soft); max-width:70ch; }
+  .anam-note b{ color:var(--amber); font-size:16px; line-height:1; }
 </style>
 </head>
 <body>
@@ -423,57 +426,49 @@
           </div>
           <div class="entry-meta">
             <span class="tag">2026</span>
-            <span class="tag">Solo</span>
+            <span class="tag">Personal project</span>
             <span class="tag status">Prototype</span>
-            <span class="tag warn">Not wired to form fill yet</span>
+            <span class="tag warn">Not clinically validated</span>
           </div>
         </div>
-        <p class="anam-def"><b>Anamnesis</b> is the patient history a doctor takes by talking with the patient. This tool listens to that conversation and fills in the screening form for them.</p>
+        <p class="anam-def"><b>Anamnesis</b> is the patient history taken by talking with the patient. This tool listens to that conversation and pre-fills the screening form; the nurse reviews and submits.</p>
 
         <div class="anam">
-          <div class="anam-head"><span>THE CORE IDEA — SPEECH IN, EVIDENCED ANSWERS OUT</span><span class="tag status">Real recording · verbatim</span></div>
-          <div class="anam-grid">
-            <div>
-              <div class="anam-label">Spoken in the consultation (Whisper output)</div>
-              <p class="anam-quote"><mark>Ada saudara sekandung yang sakit hepatitis B?</mark> <mark>Enggak.</mark> Enggak ya?</p>
-              <p class="gloss">“Any siblings with hepatitis B?” “No.” “No, right?”</p>
-            </div>
-            <div>
-              <div class="anam-label">Form answers the model filled in</div>
-              <ul class="anam-list">
-                <li><span class="q">Apakah Anda memiliki ibu kandung/saudara sekandung yang menderita Hepatitis B?</span><span class="a">Tidak</span><span class="ev">“Ada saudara sekandung yang sakit hepatitis B? Enggak”</span></li>
-              </ul>
-            </div>
-          </div>
-          <div class="anam-foot">The patient answers a turn after the doctor asks. Each answer must match an allowed option and quote the transcript, or it is rejected.</div>
+          <div class="anam-head"><span>THE CORE IDEA — SPEECH IN, EVIDENCED ANSWERS OUT</span><span class="tag status">Extension demo</span></div>
+          <img class="anam-photo demo" src="img/anamnesis_demo.webp" alt="Demo of the extension: a screening form with Hepatitis B questions on the left, and the Scribe Anamnesis side panel on the right listing each answer with the quoted words behind it. Two asterisks mark question 2, where the form shows Tidak and the scribe log shows Ya.">
+          <div class="anam-foot">Left, the screening form. Right, the scribe's log, with the quoted words behind each answer. The nurse reviews and clicks Submit; the extension never does.</div>
+          <p class="anam-note"><b>*</b> Question 2 shows two different answers: the form still holds the previous answer (Tidak), while the scribe's log shows its new answer (Ya). The scribe's answer has not been sent to the form yet.</p>
         </div>
 
         <div class="entry-body stacked">
           <div>
             <dl>
-              <div class="field"><dt>Aim</dt><dd>To build a pipeline that turns a spoken doctor–patient consultation into structured answers for a 128-question screening form.</dd></div>
+              <div class="field"><dt>Aim</dt><dd>To build a pipeline and Chrome extension that turn a nurse–patient anamnesis in Bahasa Indonesia into answers for the open screening form (194-question bank), with the nurse reviewing before submitting.</dd></div>
               <div class="field exploration">
                 <div class="anam">
-                  <div class="anam-head"><span>EXPLORATION — WHAT MOVED THE RESULT, AND WHAT DIDN'T</span><span class="tag status">One recording</span></div>
+                  <div class="anam-head"><span>EXPLORATION — WHAT MOVED THE RESULT, AND WHAT DIDN'T</span><span class="tag status">Real recording + synthetic dev set</span></div>
                   <ul class="leads">
                     <li><span class="f">The extension's existing keyword matcher, tested on a real transcript, filled 0 of 17 answers.</span><span class="ar">→</span><span class="d">Free speech doesn't match form wording, so an LLM reads the transcript against the questions instead.</span></li>
-                    <li><span class="f">Window size drove recall: 13 of 39 correct at 3 segments, 26 at 6. The revision rule alone added nothing at 3 segments (14 vs 13).</span><span class="ar">→</span><span class="d">Use a six-segment sliding window.</span></li>
+                    <li><span class="f">Window size drove recall on the real recording: 13 of 39 correct at 3 segments, 26 at 6. The revision rule alone added nothing at 3 segments.</span><span class="ar">→</span><span class="d">Use a six-segment sliding window.</span></li>
                     <li><span class="f">Denoising the audio before Whisper made transcripts worse: word error rate rose from 40% to 56–73% across three denoisers.</span><span class="ar">→</span><span class="d">Leave denoising out of the pipeline.</span></li>
+                    <li><span class="f">A root-cause analysis of the synthetic dev set found that 43% of lost answers were taken from a neighbouring question or from the nurse's own question.</span><span class="ar">→</span><span class="d">Tag each turn as nurse or patient, and never reuse one patient segment for a second question.</span></li>
+                    <li><span class="f">12% of lost answers were spoken numbers (“tiga hari”) that failed the check that a number must appear in the text.</span><span class="ar">→</span><span class="d">Let number words pass the check.</span></li>
                   </ul>
                 </div>
               </div>
               <div class="field">
                 <dt>Approach</dt>
-                <dd>Audio in, validated answers out: Whisper transcribes the consultation, personal information is scrubbed out, then an LLM reads a sliding window of that transcript against the full question bank and answers only where it can point to supporting words in the transcript (FIG. 5).</dd>
-                <dd>The same pipeline runs against a hosted model, with personal information scrubbed first, or against a local model on a server you control, so no transcript leaves it. The local runs add guards against invented answers: a number check, a topic gate and a character n-gram gate.</dd>
+                <dd>The extension records the conversation and cuts it at pauses into 5–12 second clips. A server transcribes them with Whisper, masks identifiers, and for each patient segment asks an LLM which unanswered questions that segment answers, over a window of the last 6 segments. After the nurse presses “Selesai”, the extension fills the form. It never presses Submit and never overwrites a field the nurse edited (FIG. 5).</dd>
+                <dd>Each reply is JSON with a quoted piece of evidence. Two filters cut invented answers: a number must appear in the text, and the question must be among the 30 most similar by character n-gram. An answer changes only on a flagged correction, and questions that appear only after another answer are asked in follow-up rounds, up to four.</dd>
+                <dd>The server deploys as a Docker image on Railway, with Whisper and the model (Qwen3.5-9B) on a separate GPU server. Identifiers are masked before text reaches the model, and names too when the model is remote.</dd>
                 <figure class="figure solo">
-                  <svg viewBox="0 0 520 150" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Pipeline: audio, Whisper, PII scrub, LLM window, validated form answers">
+                  <svg viewBox="0 0 520 150" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Pipeline: extension audio clips, Whisper, identifier masking, LLM window, form filled and nurse submits">
                     <defs><marker id="ar" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="var(--ink-soft)"/></marker></defs>
                     <rect x="1" y="1" width="518" height="148" fill="none" stroke="var(--line)" stroke-dasharray="3 3"/>
 
                     <rect x="14" y="20" width="88" height="40" rx="2" fill="none" stroke="var(--blueprint)"/>
-                    <text x="58" y="37" text-anchor="middle" font-family="IBM Plex Mono" font-size="9.5" font-weight="600" fill="var(--ink)">AUDIO</text>
-                    <text x="58" y="50" text-anchor="middle" font-family="IBM Plex Mono" font-size="7" fill="var(--ink-soft)">consultation</text>
+                    <text x="58" y="37" text-anchor="middle" font-family="IBM Plex Mono" font-size="9.5" font-weight="600" fill="var(--ink)">EXTENSION</text>
+                    <text x="58" y="50" text-anchor="middle" font-family="IBM Plex Mono" font-size="7" fill="var(--ink-soft)">5–12 s audio clips</text>
                     <path d="M102 40 H132" stroke="var(--ink-soft)" marker-end="url(#ar)"/>
 
                     <rect x="134" y="20" width="88" height="40" rx="2" fill="none" stroke="var(--blueprint)"/>
@@ -482,63 +477,73 @@
                     <path d="M222 40 H252" stroke="var(--ink-soft)" marker-end="url(#ar)"/>
 
                     <rect x="254" y="20" width="88" height="40" rx="2" fill="none" stroke="var(--amber)"/>
-                    <text x="298" y="37" text-anchor="middle" font-family="IBM Plex Mono" font-size="9.5" font-weight="600" fill="var(--ink)">PII SCRUB</text>
+                    <text x="298" y="37" text-anchor="middle" font-family="IBM Plex Mono" font-size="9.5" font-weight="600" fill="var(--ink)">MASK IDs</text>
                     <text x="298" y="50" text-anchor="middle" font-family="IBM Plex Mono" font-size="7" fill="var(--ink-soft)">before the LLM call</text>
                     <path d="M342 40 H372" stroke="var(--ink-soft)" marker-end="url(#ar)"/>
 
                     <rect x="374" y="20" width="98" height="40" rx="2" fill="var(--blueprint-soft)" stroke="var(--blueprint)"/>
                     <text x="423" y="35" text-anchor="middle" font-family="IBM Plex Mono" font-size="9.5" font-weight="600" fill="var(--ink)">LLM WINDOW</text>
-                    <text x="423" y="47" text-anchor="middle" font-family="IBM Plex Mono" font-size="6.5" fill="var(--ink-soft)">6 segments · full bank</text>
+                    <text x="423" y="47" text-anchor="middle" font-family="IBM Plex Mono" font-size="6.5" fill="var(--ink-soft)">6 segments · evidence</text>
 
                     <path d="M423 60 V95 H298" fill="none" stroke="var(--ink-soft)"/>
                     <path d="M298 95 V116" fill="none" stroke="var(--ink-soft)" marker-end="url(#ar)"/>
                     <rect x="188" y="118" width="220" height="26" rx="2" fill="none" stroke="var(--blueprint)"/>
-                    <text x="298" y="135" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" font-weight="600" fill="var(--ink)">VALIDATED FORM ANSWERS</text>
+                    <text x="298" y="135" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" font-weight="600" fill="var(--ink)">FORM FILLED · NURSE SUBMITS</text>
                   </svg>
-                  <figcaption>FIG. 5 — speech to validated form answers</figcaption>
+                  <figcaption>FIG. 5 — from the nurse's conversation to a pre-filled form</figcaption>
                 </figure>
               </div>
               <div class="field">
                 <dt>Outcome</dt>
-                <dd>On one 6.3-minute recording, the best hosted run answered 26 of the 39 questions correctly (precision 79%, recall 67%), up from 13 with a 3-segment window. Three later runs of the same configuration scored 22 to 28 correct at 48–67% precision, so 79% is the top of a range. All figures are in-sample: the filters, window and question bank were tuned on this recording.</dd>
-                <div class="bars" role="img" aria-label="Precision rose from 57 to 79 percent and recall from 33 to 67 percent, best run">
-                  <div class="bars-head"><span style="margin-right:auto">Best run</span><span class="key"><i class="k0"></i>Window 3</span><span class="key"><i class="k1"></i>Window 6</span></div>
-                  <div class="bar-row"><span class="bl">Precision</span><div class="bt"><div class="b0" style="width:56.5%"></div><div class="b1" style="width:78.8%"></div></div><span class="bv">57% → 79%</span></div>
-                  <div class="bar-row"><span class="bl">Recall</span><div class="bt"><div class="b0" style="width:33.3%"></div><div class="b1" style="width:66.7%"></div></div><span class="bv">33% → 67%</span></div>
+                <dd>Two evaluations, both in-sample, so read them as development results rather than accuracy on unseen patients.</dd>
+                <p class="fig-desc"><b>Synthetic dev set.</b> 60 invented patient scripts (10 patients × 6 forms, about 320 scored questions), written as Whisper-like transcripts with typos and calibrated on the real recording. The pipeline was tuned on this set.</p>
+                <div class="bars wide" role="img" aria-label="Dev set F1: baseline 61 percent, plus number words 62, plus speaker labels and evidence guard 70, final 72">
+                  <div class="bars-head"><span style="margin-right:auto">Dev set F1, by change</span></div>
+                  <div class="bar-row"><span class="bl">Baseline</span><div class="bt"><div class="b0" style="width:61%"></div></div><span class="bv">61%</span></div>
+                  <div class="bar-row"><span class="bl">+ number words</span><div class="bt"><div class="b0" style="width:62%"></div></div><span class="bv">62%</span></div>
+                  <div class="bar-row"><span class="bl">+ speaker labels</span><div class="bt"><div class="b1" style="width:70%"></div></div><span class="bv">70%</span></div>
+                  <div class="bar-row"><span class="bl">Final</span><div class="bt"><div class="b1" style="width:72%"></div></div><span class="bv">72%</span></div>
                 </div>
                 <div class="nums">
-                  <div><b>13 → 26</b>correct of 39 asked (best run)</div>
-                  <div><b>46 s → 7 s</b>median lag with 3 concurrent calls (P90 79 s → 11 s)</div>
+                  <div><b>35 → 13</b>hallucinated answers (dev set)</div>
+                  <div><b>61% → 72%</b>F1 (dev set)</div>
                 </div>
-                <div class="errs">
-                  <div class="errs-label">Best run errors: 7 wrong of 33 answered, 10 missed</div>
-                  <div class="errs-bar"><i class="e-ok" style="flex:26"></i><i class="e-wrong" style="flex:3"></i><i class="e-hall" style="flex:4"></i><i class="e-miss" style="flex:10"></i></div>
-                  <div class="errs-key"><span><i class="e-ok"></i>26 correct</span><span><i class="e-wrong"></i>3 wrong value</span><span><i class="e-hall"></i>4 answered but never asked</span><span><i class="e-miss"></i>10 missed</span></div>
+                <p class="fig-desc">The speaker-labels step also adds the guard against reusing a patient segment. The final run uses a better speaker classifier.</p>
+                <div class="bars wide" role="img" aria-label="Dev set F1 by form, baseline to final: activity 47 to 69, smoking 58 to 71, mental health 46 to 65, TB risk 53 to 63, demographics 67 to 62, liver 85 to 82">
+                  <div class="bars-head"><span style="margin-right:auto">F1 by form</span><span class="key"><i class="k0"></i>Baseline</span><span class="key"><i class="k1"></i>Final</span></div>
+                  <div class="bar-row"><span class="bl">Activity</span><div class="bt"><div class="b0" style="width:47%"></div><div class="b1" style="width:69%"></div></div><span class="bv">47→69</span></div>
+                  <div class="bar-row"><span class="bl">Smoking</span><div class="bt"><div class="b0" style="width:58%"></div><div class="b1" style="width:71%"></div></div><span class="bv">58→71</span></div>
+                  <div class="bar-row"><span class="bl">Mental health</span><div class="bt"><div class="b0" style="width:46%"></div><div class="b1" style="width:65%"></div></div><span class="bv">46→65</span></div>
+                  <div class="bar-row"><span class="bl">TB risk</span><div class="bt"><div class="b0" style="width:53%"></div><div class="b1" style="width:63%"></div></div><span class="bv">53→63</span></div>
+                  <div class="bar-row"><span class="bl">Demographics</span><div class="bt"><div class="b0" style="width:67%"></div><div class="b1" style="width:62%;background:var(--amber)"></div></div><span class="bv">67→62</span></div>
+                  <div class="bar-row"><span class="bl">Liver</span><div class="bt"><div class="b0" style="width:85%"></div><div class="b1" style="width:82%;background:var(--amber)"></div></div><span class="bv">85→82</span></div>
                 </div>
+                <p class="fig-desc"><b>Not every form improved.</b> Demographics and liver ended slightly below baseline (amber). Difficulty matters in a particular way: typo level changes little (F1 75%, 73%, 67% from slight to hard), while the number of tricky cases changes a lot (80%, 77%, 56% from normal to many). Tricky cases include self-corrections, negation traps and answers about another person.</p>
                 <div class="qual">
-                  <div class="errs-label">Hosted vs local model, same recording</div>
+                  <div class="errs-label">Real recording, 6.3 minutes, 39 reference answers</div>
                   <div class="choice-wrap">
                     <table class="choice">
                       <thead><tr><th>Setup</th><th>Correct of 39</th><th>Precision</th><th>Recall</th></tr></thead>
                       <tbody>
                         <tr><td>Hosted (DeepSeek), best run</td><td>26</td><td>79%</td><td>67%</td></tr>
                         <tr><td>Hosted, three later runs</td><td>22–28</td><td>48–67%</td><td>56–72%</td></tr>
-                        <tr><td>Local Qwen2.5-7B, one V100</td><td>16</td><td>47%</td><td>41%</td></tr>
-                        <tr><td>Local Qwen3.5-9B, one T4</td><td>27</td><td>57%</td><td>69%</td></tr>
+                        <tr><td>Local Qwen2.5-7B</td><td>16</td><td>47%</td><td>41%</td></tr>
+                        <tr><td>Local Qwen3.5-9B, earlier pipeline</td><td>27</td><td>57%</td><td>69%</td></tr>
+                        <tr><td>Local Qwen3.5-9B, current pipeline</td><td>32</td><td>74%</td><td>82%</td></tr>
                       </tbody>
                     </table>
                   </div>
-                  <p class="fig-desc"><b>Reading the table.</b> The 9B local model on a single T4 landed inside the range of the hosted model's repeat runs, with patient text never leaving the server. The local Qwen2.5 server also gave identical results on repeat, where the hosted model varied by 2–3 correct answers.</p>
-                  <p class="fig-desc"><b>Speed.</b> A local call takes about 1 s (median 0.9 s, P90 6.8 s for the 9B). End-to-end lag with a local model has not been measured.</p>
+                  <p class="fig-desc"><b>Read the last row with care.</b> It uses a 62-question bank, and its reference answers were revised after seeing the model's output, so it is optimistic and not directly comparable with the rows above. Only one real recording exists.</p>
+                  <p class="fig-desc"><b>Speed.</b> Running calls concurrently cut the hosted model's median lag from 46 s to 7 s (P90 79 s to 11 s). A single model call took about 12 s (median) on the first GPU server and 1.7 s on the latest endpoint; that gap is hardware, not code. Time to fill after “Selesai” is not yet measured.</p>
                 </div>
                 <div class="errs">
                   <div class="errs-label">Limits</div>
-                  <p class="gloss" style="margin:0">One recording, tuned on it, with no held-out test. The window and revision rule were not re-ablated on the local model, and hosted cost is unmeasured. A 62-question pre-filtered bank reached 82% recall, but against a narrower 34-item reference, so it is not comparable.</p>
+                  <p class="gloss" style="margin:0">Not clinically validated and not used in a clinic. All real-recording numbers are in-sample, and the dev set is what the pipeline was tuned on. A 120-script held-out test set is written but not yet run. Speaker labelling exists only in the evaluation, not yet in the live server, and the legal questions on health data are open before any real patient use.</p>
                 </div>
               </div>
             </dl>
             <div class="stack-row">
-              <span class="chip">Python</span><span class="chip">FastAPI</span><span class="chip">faster-whisper</span><span class="chip">DeepSeek via OpenRouter</span><span class="chip">Chrome extension (MV3, JavaScript)</span><span class="chip">Qwen2.5-7B · Qwen3.5-9B via Ollama (local)</span>
+              <span class="chip">Python</span><span class="chip">FastAPI</span><span class="chip">WebSocket</span><span class="chip">faster-whisper</span><span class="chip">Qwen3.5-9B via Ollama (local)</span><span class="chip">DeepSeek, Qwen2.5-7B (compared)</span><span class="chip">Chrome extension (MV3, JavaScript)</span><span class="chip">Docker</span><span class="chip">Railway</span><span class="chip">pytest</span>
             </div>
             <div class="privacy-note">Private repo. Patient data withheld.</div>
           </div>
